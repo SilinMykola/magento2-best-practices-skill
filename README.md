@@ -1,5 +1,12 @@
 # Magento 2 Best Practices — Claude Skill
 
+> **Fork of [o0mohd0o/magento2-best-practices-skill](https://github.com/o0mohd0o/magento2-best-practices-skill).**
+> Changes vs upstream: removed leftovers of the author's own project (admin
+> path, ElasticSuite/2.4.6/PHPUnit 9.5/Next.js assumptions), so the rules are
+> actually generic; `SKILL.md` now starts by detecting the project's real
+> Magento/PHP/PHPUnit versions; `release-matrix.md` is marked as a dated
+> snapshot to re-check against Adobe release notes.
+
 A [Claude Code](https://claude.com/claude-code) **Skill** that teaches Claude how to write, review, and plan Magento 2 / Adobe Commerce code the right way — targeting **Magento 2.4.9** practices while staying safe on 2.4.6–2.4.8.
 
 It bundles hard-won, version-verified rules for the areas people get wrong most: DI and extension mechanisms, GraphQL/REST APIs, declarative schema, security, performance/ops, and testing. When it's active, Claude follows these rules instead of guessing from stale training data.

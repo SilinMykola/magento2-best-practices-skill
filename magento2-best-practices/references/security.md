@@ -8,7 +8,7 @@
 
 ## Admin hardening
 
-- Custom admin front name (project: `admin_15cfht` ✓), Add Secret Key to URLs ON, case-sensitive passwords, session lifetime + ~90-day password lifetime, login lockout, IP-allowlist/VPN the admin, WAF in front, audit docroot for exposed .git/dumps/logs.
+- Custom admin front name, Add Secret Key to URLs ON, case-sensitive passwords, session lifetime + ~90-day password lifetime, login lockout, IP-allowlist/VPN the admin, WAF in front, audit docroot for exposed .git/dumps/logs.
 - Least-privilege ACL roles. **Since 2.4.8 new ACL resources from custom modules are NOT auto-granted to existing roles** — grant explicitly.
 - 2FA (`Magento_TwoFactorAuth`) is mandatory since 2.4.0 for admin UI + admin web-API; never disable it in production. 2.4.9: admins configure only ONE enabled provider (was: all). Locked out → `bin/magento security:tfa:reset <user> <provider>`.
 - reCAPTCHA on admin login + storefront forms. 2.4.9 also enforces CAPTCHA on REST/GraphQL account creation (pre-2.4.9 the APIs bypassed form CAPTCHA — bots registered via API).

@@ -5,6 +5,13 @@ description: Magento 2.4.x (target 2.4.9) development best practices. Use whenev
 
 # Magento 2 Best Practices (2.4.x, target 2.4.9)
 
+**First, establish the project's real versions**: Magento from `composer.lock`
+(`magento/product-community-edition` / `magento/product-enterprise-edition`,
+or `magento/framework`), PHP from `composer.json`/runtime, PHPUnit from
+`composer.lock`. Apply version-specific rules for THAT version only. If the
+project has its own conventions file (e.g. `CLAUDE.md`, `.claude/` notes),
+it wins over this skill. On 2.3.x, the 2.4.x-specific references don't apply.
+
 You are working on Magento 2 code. Follow these rules. When a rule here is
 version-sensitive, check [release-matrix.md](references/release-matrix.md).
 
@@ -32,7 +39,7 @@ version-sensitive, check [release-matrix.md](references/release-matrix.md).
 5. **Declarative schema only**: `etc/db_schema.xml` + generated
    `db_schema_whitelist.json` for tables/columns/indexes. Data changes =
    `Setup/Patch/Data` classes (schema patches only when declarative can't
-   express it). Never InstallSchema/UpgradeSchema (removed pattern), never raw
+   express it). Never write new InstallSchema/UpgradeSchema (legacy pattern), never raw
    DDL in patches.
 6. **No raw SQL against core tables** from modules. Use repositories or, at
    the lowest level, `ResourceConnection` with bound parameters — never string

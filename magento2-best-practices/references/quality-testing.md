@@ -12,19 +12,19 @@
 
 - Magento's definition of done requires automated tests for code changes.
 - **Unit vs integration split**: pure calculation/branching → unit; anything touching DI wiring, DB, config, events, repositories, GraphQL/REST endpoints → integration/api-functional. Over-mocked unit tests of glue code are an anti-pattern (DI errors only surface at integration level).
-- For a headless build (Next.js on GraphQL), **api-functional GraphQL coverage of custom resolvers is the highest-value layer**.
+- For a headless build (PWA/Next.js/etc. on GraphQL), **api-functional GraphQL coverage of custom resolvers is the highest-value layer**.
 - MFTF is NOT deprecated (2.4.9 pins ^6.0) but is costliest to maintain — prioritize unit/integration/api-functional for module logic.
 
 ## PHPUnit version cliffs
 
 - 2.4.6 → PHPUnit **9.5**; 2.4.8 → **10.5**; 2.4.9 → **12.0**.
-- Metadata style is VERSION-DEPENDENT: attributes (`#[Test]`, `#[DataProvider]`) exist only in PHPUnit **10+** — on the project's 2.4.6 (PHPUnit 9.5) they are silently inert (a `#[DataProvider]` test fails "too few arguments"; a non-`test*`-named `#[Test]` method never runs). Rule: tests that must run on the 2.4.6 box use PHPUnit-9 doc-comment annotations and `test*` method names (optionally duplicated with attributes for forward-compat); attributes-only becomes the rule after the PHPUnit ≥10 bump. Doc-comment annotations are deprecated in 11, REMOVED in 12.
+- Metadata style is VERSION-DEPENDENT: attributes (`#[Test]`, `#[DataProvider]`) exist only in PHPUnit **10+** — on 2.4.6 (PHPUnit 9.5) they are silently inert (a `#[DataProvider]` test fails "too few arguments"; a non-`test*`-named `#[Test]` method never runs). Rule: tests that must run on PHPUnit 9.x use PHPUnit-9 doc-comment annotations and `test*` method names (optionally duplicated with attributes for forward-compat); attributes-only becomes the rule after the PHPUnit ≥10 bump. Doc-comment annotations are deprecated in 11, REMOVED in 12.
 - `withConsecutive()` removed since PHPUnit 10 — use per-invocation expectations or `willReturnCallback`.
 - **ObjectManagerHelper (`TestFramework\Unit\Helper\ObjectManager`) is @deprecated** — instantiate the class under test with `new` + explicit `$this->createMock()` dependencies. Never the real ObjectManager in unit tests.
 
 ## Fixtures (integration + api-functional)
 
-- Prefer attribute-based parameterized fixtures (available since ~2.4.5, so usable on the project's 2.4.6):
+- Prefer attribute-based parameterized fixtures (available since ~2.4.5, so usable on 2.4.6):
   `#[DataFixture(ProductFixture::class, ['sku' => 'x-%uniqid%'], as: 'p1', scope: 'store2', count: 3)]`
 - Reference other fixtures: `['cart_id' => '$cart.id$']`; retrieve via `DataFixtureStorageManager::getStorage()->get('alias')`.
 - Fixture classes: single responsibility, `%uniqid%` for unique SKUs/emails, no inter-fixture coupling (compose via service APIs), implement revert for anything DB-transactions don't roll back.
@@ -43,5 +43,5 @@
 ## CI
 
 - Ready-made GitHub Actions for Magento modules: `extdn/github-actions-m2` (PHPCS latest Magento standard, PHPStan, PHPMD, PHPCPD, integration tests with MySQL/OpenSearch services against chosen Magento versions).
-- Recommended matrix for this project: lint+static on every PR; integration tests against BOTH the running version (2.4.6/PHP 8.2) and the upgrade target (2.4.9/PHP 8.4) to surface migration breaks early.
+- Recommended matrix: lint+static on every PR; integration tests against BOTH the running version and the planned upgrade target (Magento + PHP) to surface migration breaks early.
 - Run suites directly: `vendor/bin/phpunit -c dev/tests/unit/phpunit.xml.dist path/to/Test/Unit` (CI-friendly); `bin/magento dev:tests:run` is a convenience wrapper.

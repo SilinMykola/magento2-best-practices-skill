@@ -19,7 +19,7 @@
 
 - Types PascalCase; fields/args snake_case; mutation inputs as dedicated `XxxInput` types; entity outputs include `id: ID`; `@resolver(class:)` + `@doc(description:)` on everything.
 - Schemas merge across modules — you can add fields to other modules' types and values to shared enums. GraphQL schema lives in the `*GraphQl` companion module.
-- **Never remove/rename fields**: additive evolution only; mark obsolete fields `@deprecated(reason: "Use X instead")` and keep them working (the Next.js frontend consumes these).
+- **Never remove/rename fields**: additive evolution only; mark obsolete fields `@deprecated(reason: "Use X instead")` and keep them working (headless frontends and integrations consume these).
 
 ## Hardening & limits
 

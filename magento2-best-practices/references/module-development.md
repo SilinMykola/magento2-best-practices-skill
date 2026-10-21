@@ -23,7 +23,7 @@ Pick the NARROWEST mechanism that works:
 - Observers contain NO business logic — delegate to injected services. Small, single-purpose.
 - NEVER mutate values (incl. objects) passed with the event; no assumptions about other observers or ordering; no events fired in constructors; avoid cyclic event chains.
 - Prefer disabling a core observer (`disabled="true"`) over overriding its class.
-- Crash-safety (project scar tissue): never assume an admin session/user or request params exist; wrap non-essential side-work in `try/catch (\Throwable)` + log.
+- Crash-safety: never assume an admin session/user or request params exist; wrap non-essential side-work in `try/catch (\Throwable)` + log.
 
 ## Dependency injection
 
@@ -42,7 +42,7 @@ Pick the NARROWEST mechanism that works:
 
 ## Database schema & patches
 
-- **Declarative schema first**: `etc/db_schema.xml` (runs BEFORE patches). Data patches (`Setup/Patch/Data/`, `DataPatchInterface`) for data; schema patches only for what declarative can't express. Never InstallSchema/UpgradeSchema (pre-2.3, dead).
+- **Declarative schema first**: `etc/db_schema.xml` (runs BEFORE patches). Data patches (`Setup/Patch/Data/`, `DataPatchInterface`) for data; schema patches only for what declarative can't express. Don't write new InstallSchema/UpgradeSchema (pre-2.3 legacy; still executed for old modules).
 - Regenerate whitelist on every schema change: `bin/magento setup:db-declaration:generate-whitelist --module-name=Vendor_Module`. Dropping a column requires it whitelisted; when dropping a TABLE keep it in the whitelist or it won't drop. Renames preserve data via `onCreate="migrateDataFrom(col)"`.
 - Declarative schema WILL drop elements you remove from db_schema.xml — removals are destructive by design.
 - Patches run once (recorded in `patch_list`), ordered via `getDependencies()`; `getAliases()` when renaming a patch class. Revert (`PatchRevertableInterface`) is data-patch-only and runs ONLY on full `module:uninstall` — you can't revert one patch. Write patches idempotent.

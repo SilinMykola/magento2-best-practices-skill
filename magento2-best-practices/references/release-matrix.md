@@ -1,5 +1,9 @@
 # Magento 2.4.x release matrix & upgrade path (verified 2026-07-06)
 
+> Dated snapshot. Anything time-sensitive here (latest -p release, support
+> end dates, requirements) must be re-checked against Adobe's release notes
+> and system-requirements pages before you state it as current.
+
 ## Current releases
 
 - **2.4.9** — latest line. GA **2026-05-12** (release-notes page says May 15; mid-May 2026). ~580 fixes. Regular support to **May 2029**. No 2.4.9-p1 yet (next patch wave ~Aug 2026).
@@ -28,12 +32,11 @@ supports PHP 8.1/8.2 and MySQL 8.0, so bumping the platform first would take
 the running store down.
 
 1. **Genuinely in-place on 2.4.6**: stay on latest 2.4.6-pN, and migrate
-   search ES 7.17 → OpenSearch 2.x. ⚠ THIS BOX RUNS ELASTICSUITE: the engine
-   setting is `elasticsuite` (not `elasticsearch7`) and must STAY
-   `elasticsuite` — the migration is upgrading ElasticSuite to an
-   OpenSearch-compatible release and repointing its client config, NOT
-   flipping the engine to `opensearch` (only vanilla installs do that, and
-   flipping it here silently kills ElasticSuite search/layered nav).
+   search ES 7.17 → OpenSearch 2.x. ⚠ If the store uses a third-party search
+   module (e.g. Smile ElasticSuite, engine setting `elasticsuite`), do NOT flip
+   the engine to `opensearch` — upgrade that module to an OpenSearch-compatible
+   release and repoint its client config. Flipping the engine is only for
+   vanilla installs; on such stores it silently kills search/layered nav.
 2. Code readiness while still on 2.4.6: make custom code PHP 8.3+ clean (no
    dynamic properties etc.), CSP-safe, PHPUnit-forward-compatible.
 3. Hop to 2.4.7/2.4.8 **together with** PHP 8.3 (supported by both sides of
@@ -55,6 +58,6 @@ the running store down.
 - **ACL change 2.4.8**: new ACL resources from custom modules are NO longer auto-granted to existing admin roles.
 - GraphQL: 2.4.7 added `createGuestCart`, `applyCouponsToCart`, `estimateTotals`, `cancelOrder`; deprecated `createEmptyCart`, `clearCustomerCart`, `customAttributeMetadata`. 2.4.9: `clearCart` now in Open Source, `exchangeExternalCustomerToken`, `clearWishlist`, `OrderTotal.grand_total_excl_tax`, **CAPTCHA enforced on REST/GraphQL customer creation** (headless frontends must send tokens or exempt in config).
 - 2.4.9 internals: Symfony 7.4 LTS, JWT lib major bump, `carlos-mg89/oauth` replaced with native PHP OAuth.
-- Features that exist on 2.4.9 but NOT on the project's 2.4.6: GraphQL Resolver Cache (2.4.7+), payment-endpoint rate limiting/backpressure (2.4.7+).
+- Features that exist on 2.4.9 but NOT on 2.4.6: GraphQL Resolver Cache (2.4.7+), payment-endpoint rate limiting/backpressure (2.4.7+).
 
-When writing code for the 2.4.6 box, do not use post-2.4.6 APIs; when writing anything new, prefer patterns that survive the 2.4.9 jump (CSP-safe JS, OpenSearch-agnostic search code, non-deprecated GraphQL mutations). Tests are the exception: they must match the RUNNING PHPUnit (9.5 on this box → doc-comment annotations; see quality-testing.md).
+When writing code for a store on an older 2.4.x, do not use APIs introduced after its version; when writing anything new, prefer patterns that survive the 2.4.9 jump (CSP-safe JS, OpenSearch-agnostic search code, non-deprecated GraphQL mutations). Tests are the exception: they must match the RUNNING PHPUnit (9.5 → doc-comment annotations; 10+ → attributes; see quality-testing.md).
