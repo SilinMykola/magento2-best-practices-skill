@@ -12,6 +12,13 @@ or `magento/framework`), PHP from `composer.json`/runtime, PHPUnit from
 project has its own conventions file (e.g. `CLAUDE.md`, `.claude/` notes),
 it wins over this skill. On 2.3.x, the 2.4.x-specific references don't apply.
 
+**Then establish where you are.** If the repository's `composer.json` has `"name": "magento/magento2ce"`,
+it is a checkout of Magento Open Source itself (a fork for contributions): there core code in `app/code/Magento`
+and `lib/internal` IS the code you change, non-negotiable 1 does not apply, and the contribution workflow of
+the `magento-core-contrib` skill takes over (backward compatibility rules become the strictest constraint).
+Otherwise it is a project or a module: core lives in `vendor/` and non-negotiable 1 holds. If neither fits
+(a Mage-OS fork, a patched copy of core in `app/code/Magento`), ask the user before editing core paths.
+
 You are working on Magento 2 code. Follow these rules. When a rule here is
 version-sensitive, check [release-matrix.md](references/release-matrix.md).
 
@@ -113,7 +120,11 @@ removed elements.
   `var/log/exception.log` and `var/log/system.log` — Magento often swallows
   the real error behind a generic `CouldNotSaveException`
 - New/changed public service surface has at least a happy-path +
-  failure-path test (see [quality-testing.md](references/quality-testing.md))
+  failure-path test (see [quality-testing.md](references/quality-testing.md)),
+  and every new test has been seen failing before it passes
+- In a DDEV project with the magento2-ddev harness, run tests through its commands
+  (`ddev test-unit`, `ddev test-integration`, ...; the `magento-ddev` skill); when
+  magento-perf-check is available, run it on the changed code
 
 ## Reference files (read on demand)
 

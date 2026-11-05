@@ -7,6 +7,11 @@
 > Magento/PHP/PHPUnit versions; `release-matrix.md` is marked as a dated
 > snapshot to re-check against Adobe release notes.
 
+**Related tools** (each works alone; together they cover a change from rule to green PR):
+- [magento-perf-check](https://github.com/SilinMykola/magento-perf-check): analyzer for performance and Full Page Cache anti-patterns; the magento-ddev harness runs it on changed lines (`ddev perf-check`).
+- [magento2-ddev](https://github.com/SilinMykola/magento2-ddev): DDEV harness with one command per test layer, a separate test site, and the skill `magento-ddev`.
+- [magento2-core-contrib](https://github.com/SilinMykola/magento2-core-contrib): workflow and PR checks for fixing magento/magento2 issues.
+
 A [Claude Code](https://claude.com/claude-code) **Skill** that teaches Claude how to write, review, and plan Magento 2 / Adobe Commerce code the right way — targeting **Magento 2.4.9** practices while staying safe on 2.4.6–2.4.8.
 
 It bundles hard-won, version-verified rules for the areas people get wrong most: DI and extension mechanisms, GraphQL/REST APIs, declarative schema, security, performance/ops, and testing. When it's active, Claude follows these rules instead of guessing from stale training data.
