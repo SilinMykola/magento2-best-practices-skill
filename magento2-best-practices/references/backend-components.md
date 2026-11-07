@@ -1,4 +1,4 @@
-# Backend components: attributes, CLI, cron, logging, config, queues, email (Magento 2.4.x)
+# Backend components: attributes, CLI, cron, logging, config, queues, indexers, cache types, email (Magento 2.4.x)
 
 Performance rules for these components (Proxy for CLI command dependencies, cron every minute, mview subscriptions,
 `Recurring` setup, synchronous topics, cron groups) are in [magento-perf-check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/SPEC.md#4-rule-catalog) and
@@ -80,6 +80,38 @@ at tag 2.4.9 unless a line says otherwise.
 - Omit `connection` in `queue_*.xml` so `env.php` decides: 2.4.9 picks `queue/default_connection`, then stomp, then
   amqp, then db (2.4.8 has no stomp).
 
+## Custom indexers and mview
+
+- `mview.xml` triggers write the subscribed table's `entity_column` into `<view_id>_cl` on INSERT, DELETE (the old
+  value) and UPDATE of **any** column except the ignored ones (default: `updated_at`), not only the columns your index
+  reads. `setup:upgrade` recreates the triggers of scheduled indexers. Since 2.4.8 a newly installed indexer starts in
+  Update by Schedule.
+- Implement `Magento\Framework\Indexer\ActionInterface` (`executeFull`, `executeList`, `executeRow`) and
+  `Magento\Framework\Mview\ActionInterface::execute($ids)` delegating to `executeList`. The ids include deleted
+  entities, so `executeList` also removes index rows whose source is gone; for the same ids it must produce exactly
+  what a full reindex would.
+- `execute()` is idempotent (delete-then-insert or `insertOnDuplicate`): `View::update()` saves `version_id` only after
+  all batches succeed, so after an exception the whole range runs again on the next cron.
+- Full reindex without downtime: fill a `<table>_replica` declared in `db_schema.xml`, then
+  `Magento\Catalog\Model\ResourceModel\Indexer\ActiveTableSwitcher::switchTable()` (Magento_Catalog, not `@api`:
+  pin the dependency and re-check it on upgrade); partial reindexes write the active table.
+- When a config change makes the index stale, call `IndexerRegistry::get($id)->invalidate()` from the backend model's
+  `afterSave` when the value changed, and let cron rebuild it (core `PriceScope`). A changed `indexer.xml` marks the
+  indexer invalid on `setup:upgrade`.
+- Product price index with dimension modes (`indexer:set-dimensions-mode catalog_product_price`): the core table
+  resolver plugin maps `catalog_product_index_price` to the dimension table only in the `frontend`, `webapi_rest` and
+  `webapi_soap` areas. In `graphql`, admin, cron or CLI resolve it with `PriceTableResolver::resolve()` (not `@api`:
+  re-check on upgrade).
+
+## Custom cache types
+
+- `etc/cache.xml` `<type name instance>`; the class extends `Magento\Framework\Cache\Frontend\Decorator\TagScope` with
+  `TYPE_IDENTIFIER` and `CACHE_TAG` and is built from `FrontendPool::get(TYPE_IDENTIFIER)`. `save()` always adds
+  `CACHE_TAG`; `clean()` removes only this type's entries; `clean(CLEANING_MODE_MATCHING_TAG, [$tag])` removes entries
+  carrying both tags.
+- On an existing install a new type stays disabled until `bin/magento cache:enable <id>` (only `setup:install` enables
+  all types). A disabled type returns false from `load()` and ignores `save()`, so code must work with it off.
+
 ## Transactional email
 
 - `TransportBuilder` with `setTemplateOptions(['area' => ..., 'store' => $storeId])` (both keys, or "The design config
@@ -107,5 +139,15 @@ Core code: `lib/internal/Magento/Framework/Api/ExtensionAttribute/JoinProcessor.
 `app/code/Magento/Store/Model/App/Emulation.php`, `lib/internal/Magento/Framework/MessageQueue/Consumer.php`,
 `app/code/Magento/MysqlMq/Model/Driver/Queue.php` (`reject()`),
 `lib/internal/Magento/Framework/MessageQueue/DefaultValueProvider.php`,
-`lib/internal/Magento/Framework/Mail/Template/TransportBuilder.php`, `app/code/Magento/Contact/Model/Mail.php`;
+`lib/internal/Magento/Framework/Mail/Template/TransportBuilder.php`, `app/code/Magento/Contact/Model/Mail.php`,
+`lib/internal/Magento/Framework/Mview/{View,View/Subscription}.php`, `app/code/Magento/Indexer/etc/di.xml`
+(`ignoredUpdateColumns`), `app/code/Magento/Indexer/Setup/Recurring.php` (2.4.6 vs 2.4.8),
+`app/code/Magento/Catalog/Model/ResourceModel/Indexer/ActiveTableSwitcher.php`,
+`app/code/Magento/Catalog/Model/Indexer/Product/Price/{PriceTableResolver,Plugin/TableResolver}.php`,
+`app/code/Magento/Catalog/Model/Indexer/Product/Price/System/Config/PriceScope.php`,
+`lib/internal/Magento/Framework/Cache/Frontend/Decorator/TagScope.php`, `setup/src/Magento/Setup/Model/Installer.php`
+(`enableCaches`); [indexing](https://developer.adobe.com/commerce/php/development/components/indexing),
+[custom indexer](https://developer.adobe.com/commerce/php/development/components/indexing/custom-indexer),
+[indexer optimization](https://developer.adobe.com/commerce/php/development/components/indexing/optimization),
+[cache type](https://developer.adobe.com/commerce/php/development/cache/partial/cache-type);
 `composer.lock` of 2.4.9 and `composer.json` at tags 2.4.6–2.4.8 for symfony/console and monolog versions.

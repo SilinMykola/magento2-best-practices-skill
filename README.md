@@ -8,7 +8,9 @@
 > snapshot to re-check against Adobe release notes; added references
 > `frontend.md` and `backend-components.md`, admin ACL in code, stateless
 > services and application state tests (2.4.7+), PHP 8.4/8.5 deprecations, and
-> the isolated-patch security process of 2026, each rule with its source.
+> the isolated-patch security process of 2026; then `payments.md`,
+> `inventory-msi.md`, `admin-ui.md`, Hyvä storefronts, custom indexers and cache
+> types, and upload/path/mass-assignment/SSRF rules. Each rule carries its source.
 
 **Related tools** (each works alone; together they cover a change from rule to green PR):
 - [magento-perf-check](https://github.com/SilinMykola/magento-perf-check): analyzer for performance and Full Page Cache anti-patterns; the magento-ddev harness runs it on changed lines (`ddev perf-check`).
@@ -31,8 +33,11 @@ magento2-best-practices/
     ├── performance-ops.md      # modes, deploy pipeline, cron/queues, indexers, Redis/Varnish
     ├── security.md             # patch cadence, admin hardening, admin ACL in code, CSP, code-level rules
     ├── quality-testing.md      # unit/integration/api-functional tests, state tests, PHPCS/PHPStan, CI, semver
-    ├── backend-components.md   # extension attributes, EAV patches, CLI, cron, logging, config, queues, email
-    └── frontend.md             # view models, layout XML, customer-data sections, RequireJS, themes, i18n
+    ├── backend-components.md   # extension attributes, EAV patches, CLI, cron, logging, config, queues, indexers, email
+    ├── frontend.md             # view models, layout XML, customer-data sections, RequireJS, themes, i18n, Hyvä
+    ├── admin-ui.md             # listings, forms and modifiers, mass actions, inline edit
+    ├── payments.md             # payment gateway, order state, vault, headless payments, webhooks
+    └── inventory-msi.md        # salable qty, reservations, legacy stock API, ERP stock import
 ```
 
 `SKILL.md` is the always-loaded core. The `references/` files are pulled in progressively — Claude reads `graphql-api.md` only when you're actually touching GraphQL, keeping context lean.

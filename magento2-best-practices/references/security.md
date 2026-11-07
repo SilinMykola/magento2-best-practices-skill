@@ -39,6 +39,38 @@
 
 Sources: core code, magento/magento2 2.4.9: `app/code/Magento/Backend/App/AbstractAction.php`, `app/code/Magento/Authorization/Model/ResourceModel/Rules.php` (`saveRel`), `app/code/Magento/Config/Model/Config/Structure/Element/Section.php`, `app/code/Magento/Ui/Controller/Adminhtml/AbstractAction.php`, `app/code/Magento/Ui/Controller/Adminhtml/Index/Render.php` (`validateAclResource`), example `app/code/Magento/Cms/view/adminhtml/ui_component/cms_page_listing.xml`; [ACL tutorial](https://developer.adobe.com/commerce/php/tutorials/backend/create-access-control-list-rule), [admin grid tutorial](https://developer.adobe.com/commerce/php/development/components/add-admin-grid) (opened November 2026).
 
+## Files, paths, mass assignment, SSRF
+
+- Uploads: `Magento\MediaStorage\Model\File\Uploader` with `setAllowedExtensions([...])`; its
+  `checkAllowedExtension()` also blocks `general/file/protected_extensions` (php, phtml, phar, htaccess, svg, html,
+  xml, ...). The framework `Magento\Framework\File\Uploader` allows every extension when no allow-list is set. Add
+  `checkMimeType([...])` (reads the content, not the client header) and `setAllowRenameFiles(true)`.
+- Image validation (`addValidateCallback(..., $imageAdapter, 'validateUploadFile')`) does not prove a file is safe: an
+  image/PHP polyglot passes it, so the extension check is what stops it (seen exploited in 2026:
+  [Sansec, PolyShell](https://sansec.io/research/magento-polyshell)).
+- Non-public files go under `DirectoryList::VAR_DIR`, never `pub/`, with random names; record ownership and check it
+  before reading or deleting.
+- File I/O through `Filesystem::getDirectoryRead/Write(DirectoryList::X)`: every method runs `PathValidator`, which
+  throws `ValidatorException` for a path resolving outside the directory or starting with `-` (it is a prefix check:
+  a sibling directory sharing the name prefix is not caught). `Filesystem\Driver\File`, `Io\File` and raw
+  `file_put_contents()` validate nothing.
+- Never `setData()`/`addData()` request params onto a model: hydrate an operation-specific DTO
+  (`DataObjectHelper::populateWithArray()`), take IDs from the user context (`force="true"` in webapi.xml), and expose
+  privileged fields only on endpoints with their own ACL. Core examples: `CustomerExtractor` in
+  `Customer/Controller/Account/CreatePost.php`; `AccountManagementApi::validateCustomerRequest()` rejects `group_id`
+  without its ACL resource.
+- Do not fetch user-supplied URLs. If unavoidable: http/https only, an allow-list of hosts, never echo the response.
+  Core's guard for downloadable links and import image URLs is `Magento\Downloadable\Model\Url\DomainValidator`
+  (`downloadable_domains` in env.php, `bin/magento downloadable:domains:add`).
+
+Sources: core code, magento/magento2 2.4.9: `lib/internal/Magento/Framework/File/Uploader.php`,
+`app/code/Magento/MediaStorage/Model/File/Uploader.php`, `app/code/Magento/Store/etc/config.xml`,
+`app/code/Magento/Catalog/Model/ImageUploader.php`, `lib/internal/Magento/Framework/Filesystem/Directory/PathValidator.php`,
+`app/code/Magento/Customer/Model/AccountManagementApi.php`, `app/code/Magento/Downloadable/Model/Url/DomainValidator.php`;
+Adobe docs (opened November 2026): [file uploads](https://developer.adobe.com/commerce/php/development/security/file-uploads),
+[mass assignment](https://developer.adobe.com/commerce/php/development/security/mass-assignment),
+[SSRF](https://developer.adobe.com/commerce/php/development/security/server-side-request-forgery).
+
 ## Attack classes to design against
 
 - **CosmicSting (CVE-2024-34102, CVSS 9.8)**: unauthenticated XXE via nested deserialization in REST/GraphQL → read env.php → stolen crypt key → forged admin JWTs → CMS-block skimmer injection (RCE when chained with CVE-2024-2961). Lessons: any API-reachable deserialization of nested structures is attack surface; XML parsers must not resolve external entities; env.php readability = total compromise.

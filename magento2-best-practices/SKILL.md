@@ -1,6 +1,6 @@
 ---
 name: magento2-best-practices
-description: Magento 2.4.x (target 2.4.9) development best practices. Use whenever writing, reviewing, or planning Magento/Adobe Commerce code — modules, plugins, observers, GraphQL resolvers, REST endpoints, db_schema changes, admin UI, layout XML/templates/RequireJS/themes, CLI commands, cron/queues. Triggers on "build a Magento module/feature", "add GraphQL mutation/query", "fix Magento bug", "review this Magento code", "upgrade Magento".
+description: Magento 2.4.x (target 2.4.9) development best practices. Use whenever writing, reviewing, or planning Magento/Adobe Commerce code — modules, plugins, observers, GraphQL resolvers, REST endpoints, db_schema changes, admin UI, layout XML/templates/RequireJS/Hyvä themes, payment methods, inventory/MSI, CLI commands, cron/queues/indexers. Triggers on "build a Magento module/feature", "add GraphQL mutation/query", "fix Magento bug", "review this Magento code", "upgrade Magento".
 ---
 
 # Magento 2 Best Practices (2.4.x, target 2.4.9)
@@ -48,7 +48,8 @@ version-sensitive, check [release-matrix.md](references/release-matrix.md).
    `Setup/Patch/Data` classes (schema patches only when declarative can't
    express it). Never write new InstallSchema/UpgradeSchema (legacy pattern), never raw
    DDL in patches.
-6. **No raw SQL against core tables** from modules. Use repositories or, at
+6. **No raw SQL against core tables** from modules (MSI `inventory_*` tables
+   included: [inventory-msi.md](references/inventory-msi.md)). Use repositories or, at
    the lowest level, `ResourceConnection` with bound parameters — never string
    interpolation into queries.
 7. **Escape all output** in templates via `$escaper->escapeHtml/escapeHtmlAttr/
@@ -62,7 +63,8 @@ version-sensitive, check [release-matrix.md](references/release-matrix.md).
 9. **Money paths are sacred**: single-writer services, idempotency keys,
    never float arithmetic on currency (use `Magento\Framework\Pricing` /
    bcmath / minor units), and never duplicate a posting an event observer
-   already performs.
+   already performs. Payment methods: [payments.md](references/payments.md);
+   stock and salability: [inventory-msi.md](references/inventory-msi.md).
 10. **Cache correctness**: anything rendering entity data declares identities
     (`IdentityInterface`); custom GraphQL queries declare cache identity or
     are explicitly uncacheable; never cache per-customer data in FPC.
@@ -146,11 +148,17 @@ removed elements.
   pipeline, cron/queues, indexers, Redis/Valkey, Varnish, collection
   anti-patterns
 - [security.md](references/security.md) — patching cadence, admin hardening,
-  admin ACL in code, CSP, code-level security rules, known attack classes
+  admin ACL in code, uploads/paths/mass assignment/SSRF, CSP, code-level security rules, known attack classes
 - [quality-testing.md](references/quality-testing.md) — unit/integration/
   api-functional tests, fixtures, application state tests, PHPCS/PHPStan, CI, semver
 - [backend-components.md](references/backend-components.md) — extension
   attributes, EAV attribute patches, CLI commands, cron, logging, config scope,
-  store emulation, queue consumers, transactional email
+  store emulation, queue consumers, custom indexers/mview, cache types, email
 - [frontend.md](references/frontend.md) — view models, layout XML, customer-data
-  sections, RequireJS mixins, jsLayout, themes/LESS, translations
+  sections, RequireJS mixins, jsLayout, themes/LESS, translations, Hyvä storefronts
+- [admin-ui.md](references/admin-ui.md) — listing data providers, fulltext search,
+  form data providers and modifiers, mass actions, inline edit
+- [payments.md](references/payments.md) — payment gateway (Adapter, commands,
+  can_* flags), payment actions and order state, vault, headless and webhooks
+- [inventory-msi.md](references/inventory-msi.md) — salable qty, stock resolution,
+  legacy CatalogInventory, reservations, ERP stock import, source selection

@@ -1,7 +1,7 @@
 # Frontend: templates, layout, JS, themes, i18n (Magento 2.4.x)
 
-Luma/Blank stack (RequireJS, Knockout, LESS). A Hyvä or headless storefront follows its own docs; the layout XML
-and i18n rules still apply there. Full Page Cache rules (`cacheable="false"`, `sections.xml` with `*`,
+Sections up to "Translations" cover the Luma/Blank stack (RequireJS, Knockout, LESS); a Hyvä storefront follows
+[Hyvä](#hyvä-storefronts) at the end, a headless one its own frontend's docs. Full Page Cache rules (`cacheable="false"`, `sections.xml` with `*`,
 `$_isScopePrivate`, `createBlock()` in templates, view-model cache tags) are in [magento-perf-check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/SPEC.md#4-rule-catalog), not here.
 Escaping and CSP: [security.md](security.md). Admin ACL for controllers, `system.xml` and UI components:
 [security.md](security.md#admin-acl-in-code).
@@ -67,6 +67,45 @@ Escaping and CSP: [security.md](security.md). Admin ACL for controllers, `system
 - Dictionaries: `i18n/<locale>.csv` in the module or theme; the file name matches the locale exactly, case included.
   Generate with `bin/magento i18n:collect-phrases -o <csv> <dir>` (`-m` only for language packs). A translation keeps
   every placeholder and adds none.
+
+## Hyvä storefronts
+
+Hyvä Theme is OSL-3.0/AFL-3.0 since 2025-11-10 (Hyvä Checkout, Enterprise and Hyvä UI stay paid).
+- Detect it: the theme's parent chain ends in `Hyva/default` or `Hyva/default-csp`, or Composer has
+  `hyva-themes/magento2-theme-module`. Then RequireJS, Knockout, LESS, mixins, `data-mage-init`/`x-magento-init`,
+  `customer-data.js` and `jsLayout` above do not apply; layout XML, view models, `.phtml`, i18n and the server side of
+  private content (`SectionSourceInterface` + `sectionSourceMap`; Hyvä loads sections from the same endpoint) do.
+- JS is inline Alpine.js in the `.phtml`; register components with `Alpine.data()` inside `alpine:init`. Styles are
+  Tailwind classes.
+- Private content: listen for `private-content-loaded` on `window` and read `$event.detail.data`; force a reload with
+  `window.dispatchEvent(new Event('reload-customer-section-data'))`. Never read customer data from localStorage.
+- View models in templates: `$viewModels->require(Foo::class)`, no layout argument needed.
+- CSP: call `$hyvaCsp->registerInlineScript()` right after every inline `</script>` (hash on cacheable pages, nonce
+  elsewhere). The strict-CSP theme `Hyva/default-csp` uses the Alpine CSP build: no inline expressions, assignments,
+  calls with arguments, `x-model` or inline `on*` handlers — use component methods and `data-*` attributes.
+- A third-party Luma module needs a compatibility module, registered on
+  `Hyva\CompatModuleFallback\Model\CompatModuleRegistry` (argument `compatModules`, items `original_module` /
+  `compat_module`); templates at the same path then override the original.
+- Tailwind builds only classes it finds in scanned files: modules are listed in `app/etc/hyva-themes.json`
+  (`bin/magento hyva:config:generate` before the CSS build); a module's own sources go in
+  `view/frontend/tailwind/tailwind-source.css` (Tailwind v4, default theme 1.4.0+) or `tailwind.config.js` (v3).
+- Without Hyvä Checkout, `hyva-themes/magento2-luma-checkout` renders checkout with Luma: there RequireJS, Knockout,
+  mixins and `jsLayout` apply, Alpine and Tailwind do not. A checkout extension needs Luma code for that fallback, or
+  separate Hyvä Checkout code.
+
+Hyvä sources (opened November 2026): [open-source announcement](https://hyva.io/blog/news/hyva-is-free-open-source.html),
+[technical vision](https://docs.hyva.io/welcome/technical-vision.html),
+[migrating JS](https://docs.hyva.io/hyva-themes/compatibility-modules/from-luma-to-hyva/migrating-js-and-templates.html),
+[section data](https://docs.hyva.io/hyva-themes/writing-code/working-with-sectiondata.html),
+[view models](https://docs.hyva.io/hyva-themes/writing-code/working-with-view-models/index.html),
+[CSP](https://docs.hyva.io/hyva-themes/writing-code/csp/csp-compatibility.html),
+[Alpine CSP](https://docs.hyva.io/hyva-themes/writing-code/csp/alpine-csp.html),
+[compatibility modules](https://docs.hyva.io/hyva-themes/compatibility-modules/technical-deep-dive.html),
+[Tailwind sources](https://docs.hyva.io/hyva-themes/working-with-tailwindcss/tailwind-purging-settings.html),
+[Luma checkout fallback](https://docs.hyva.io/hyva-themes/building-your-theme/luma-theme-fallback.html);
+code in GitHub `hyva-themes/magento2-theme-module` 1.5.3 (`src/Model/ViewModelRegistry.php`,
+`src/ViewModel/HyvaCsp.php`, `src/view/frontend/templates/page/js/private-content.phtml`),
+`hyva-themes/magento2-compat-module-fallback`, `hyva-themes/magento2-default-theme` (`composer.json`, CHANGELOG).
 
 ## Sources
 

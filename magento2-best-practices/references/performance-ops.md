@@ -17,7 +17,7 @@
 
 ## Indexers
 
-- All indexers **Update by Schedule** in production (`indexer:set-mode schedule`) — mview changelog (`*_cl` tables) + partial reindex via the index cron group. EXCEPTION: **Customer Grid must stay Update on Save**.
+- All indexers **Update by Schedule** in production (`indexer:set-mode schedule`) — mview changelog (`*_cl` tables) + partial reindex via the index cron group. Customer Grid: on 2.4.6–2.4.7 it supports only Update on Save (its mview is a dummy); since 2.4.8 it works on schedule too (AC-13810, `app/code/Magento/Customer/etc/mview.xml`).
 - Switch modes during low traffic (adds/removes DB triggers). Monitor backlog with `indexer:status`; recover invalid indexes with `indexer:reset` + `indexer:reindex`.
 
 ## Caching
@@ -25,7 +25,7 @@
 - Redis/Valkey: at minimum separate DB numbers (default cache 0, page cache 1, sessions 2); production-grade = separate instances for sessions vs cache; Unix sockets on single-node. Don't touch Lua defaults (`use_lua=0`, `use_lua_on_gc=1`) — corruption risk on 2.4.7/2.4.8.
 - Multi-node → enable **L2 cache** (local `/dev/shm` copy + Redis version-hash validation; a standard instance otherwise ships ~300KB cache per request over the network). Optional `use_stale_cache` for block_html/layout.
 - **Varnish for FPC** in production; built-in FPC is a dev fallback (`system/full_page_cache/caching_application = 2`, VCL via `varnish:vcl:generate`). Tag-based PURGE invalidation, high TTL.
-- All cache types enabled in production. Prefer `cache:clean` (tagged entries only) over `cache:flush` (wipes the whole backend incl. co-tenants → cold-cache stampede). Warm after any flush.
+- All cache types enabled in production (a module's new cache type stays disabled after `setup:upgrade`: [backend-components.md](backend-components.md#custom-cache-types)). Prefer `cache:clean` (tagged entries only) over `cache:flush` (wipes the whole backend incl. co-tenants → cold-cache stampede). Warm after any flush.
 
 ## Code-level performance
 
