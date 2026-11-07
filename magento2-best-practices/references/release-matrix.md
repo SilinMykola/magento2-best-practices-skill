@@ -1,4 +1,4 @@
-# Magento 2.4.x release matrix & upgrade path (verified 2026-07-06)
+# Magento 2.4.x release matrix & upgrade path (verified 2026-07-06; releases, lifecycle and requirements re-checked 2026-11-07)
 
 > Dated snapshot. Anything time-sensitive here (latest -p release, support
 > end dates, requirements) must be re-checked against Adobe's release notes
@@ -6,10 +6,12 @@
 
 ## Current releases
 
-- **2.4.9** — latest line. GA **2026-05-12** (release-notes page says May 15; mid-May 2026). ~580 fixes. Regular support to **May 2029**. No 2.4.9-p1 yet (next patch wave ~Aug 2026).
-- Patch levels shipped 2026-05-12: **2.4.8-p5, 2.4.7-p10, 2.4.6-p15** (bulletin APSB26-49, fixes up to CVSS 8.7).
-- **2.4.6 regular support ENDS 2026-08-11.** If you run 2.4.6, upgrade planning is urgent, not optional.
-- New cadence since Jan 2026: monthly security patches, annual feature release each May, aggregated -p releases May/November.
+- **2.4.9** — latest line. GA **2026-05-12** (release-notes page says May 15; mid-May 2026). ~580 fixes. Regular support to **2029-05-31**. No 2.4.9-p1 as of 2026-11-07.
+- Latest `-p` levels, shipped 2026-05-12: **2.4.8-p5, 2.4.7-p10, 2.4.6-p15** (bulletin APSB26-49, fixes up to CVSS 8.7). Since July 2026 security fixes ship as monthly **isolated patches** (`2.4.9-2026-jul`, `-aug`, `-sep`, `-oct`, ...) applied on top of the latest `-p`; bulletins APSB26-73 (Jul), APSB26-92 (Aug), APSB26-138 (Sep), APSB26-146 (Sep, out-of-band hotfix, exploited in the wild), APSB26-153 (Oct). How to apply: [security.md](security.md#patching).
+- Seen as of 2026-11-07, needs action: [APSB26-146](https://www.adobe.com/trust/security/products/commerce/apsb26-146.html) (2026-09-07, out of band, priority 1, CVSS 10.0 code execution without auth, CVE-2026-75650, **exploited in the wild**) is fixed by a separate hotfix that the October isolated patch does not include; [APSB26-153](https://www.adobe.com/trust/security/products/commerce/apsb26-153.html) (2026-10-13) fixes another CVSS 10.0 code execution (CVE-2026-103849) and lists no fixed Open Source 2.4.6 version. A store without both is exposed; Open Source 2.4.6 has no fix and must upgrade.
+- Lifecycle ([policy](https://experienceleague.adobe.com/en/docs/commerce-operations/release/planning/lifecycle-policy), updated 2026-09-18): 2.4.6 regular support ENDED 2026-08-11 (extended support to 2027-08-31 is described for Adobe Commerce customers; APSB26-153 lists no fixed Open Source 2.4.6 version); 2.4.7 to 2027-05-31; 2.4.8 to 2028-05-31; 2.4.9 to 2029-05-31. On Open Source 2.4.6, upgrading is now a security matter.
+- Cadence ([schedule](https://experienceleague.adobe.com/en/docs/commerce-operations/release/planning/schedule), updated 2026-10-08): monthly security patches, one feature release and one full patch each May.
+- **2.4.10-alpha1** tagged 2026-10-13, no GA date announced. Its `composer.json`: PHP `~8.3.0||~8.4.0||~8.5.0`, PHPUnit `^12.0`, MFTF `^7.0`; requirements page lists OpenSearch 3.7+, Varnish 9, RabbitMQ 4.3 ([2.4.10 release notes](https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/adobe-commerce/2-4-10)).
 
 ## 2.4.9 platform requirements (Adobe system-requirements matrix)
 
@@ -20,7 +22,7 @@
 | MariaDB | 11.8 / 12.x (12.3 tested) | 10.6-era |
 | Search | **OpenSearch 3.x only — Elasticsearch REMOVED** (deprecated 2.4.8; ES 7.17 itself EOS 2026-01-15) | ES 7.17 (EOS!) / OpenSearch 2 |
 | Cache | **Valkey 9** (Valkey 8 in 2.4.8; Redis-compatible drop-in, Redis no longer listed) | Redis 7 |
-| RabbitMQ | 4.2 (must migrate classic mirrored → quorum queues first; ActiveMQ Artemis flagged as long-term direction) | 3.x |
+| RabbitMQ | 4.2 at GA; requirements page shows 4.3 and ActiveMQ Artemis 2 as of 2026-11 (must migrate classic mirrored → quorum queues first; ActiveMQ Artemis flagged as long-term direction) | 3.x |
 | Composer | 2.10 (practically: latest 2.x) | 2.2+ |
 | Varnish / nginx | 8 / 1.30 | 7.x / 1.24 |
 | PHPUnit / MFTF | 12 / ^6.0 | 9.5 / ^4.2 |
@@ -43,7 +45,9 @@ the running store down.
    that hop). RabbitMQ (if adopted): 3.x → 4.2 with quorum-queue migration
    before/with the 2.4.8 hop.
 4. Hop to 2.4.9 **together with** PHP 8.4/8.5 and MySQL 8.0 → 8.4 LTS (2.4.8
-   supports MySQL 8.4, so the DB can also move during step 3's window). Note
+   supports MySQL 8.4, so the DB can also move once step 3 has reached 2.4.8;
+   2.4.4–2.4.7 support no MySQL newer than 8.0, and MySQL 8.0 itself reached end
+   of support 2026-04-30 per the system-requirements page, seen November 2026). Note
    utf8mb4 is the default collation since 2.4.8 — check custom schema/raw SQL
    for utf8mb3 assumptions.
 5. After 2.4.9 is stable: OpenSearch 2.x → 3.x.

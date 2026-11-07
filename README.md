@@ -5,7 +5,10 @@
 > path, ElasticSuite/2.4.6/PHPUnit 9.5/Next.js assumptions), so the rules are
 > actually generic; `SKILL.md` now starts by detecting the project's real
 > Magento/PHP/PHPUnit versions; `release-matrix.md` is marked as a dated
-> snapshot to re-check against Adobe release notes.
+> snapshot to re-check against Adobe release notes; added references
+> `frontend.md` and `backend-components.md`, admin ACL in code, stateless
+> services and application state tests (2.4.7+), PHP 8.4/8.5 deprecations, and
+> the isolated-patch security process of 2026, each rule with its source.
 
 **Related tools** (each works alone; together they cover a change from rule to green PR):
 - [magento-perf-check](https://github.com/SilinMykola/magento-perf-check): analyzer for performance and Full Page Cache anti-patterns; the magento-ddev harness runs it on changed lines (`ddev perf-check`).
@@ -26,8 +29,10 @@ magento2-best-practices/
     ├── module-development.md   # DI, plugins vs observers, declarative schema & patches, packaging
     ├── graphql-api.md          # resolver patterns, batch resolvers, caching, auth, REST/webapi, async
     ├── performance-ops.md      # modes, deploy pipeline, cron/queues, indexers, Redis/Varnish
-    ├── security.md             # patch cadence, admin hardening, CSP, code-level rules
-    └── quality-testing.md      # unit/integration/api-functional tests, PHPCS/PHPStan, CI, semver
+    ├── security.md             # patch cadence, admin hardening, admin ACL in code, CSP, code-level rules
+    ├── quality-testing.md      # unit/integration/api-functional tests, state tests, PHPCS/PHPStan, CI, semver
+    ├── backend-components.md   # extension attributes, EAV patches, CLI, cron, logging, config, queues, email
+    └── frontend.md             # view models, layout XML, customer-data sections, RequireJS, themes, i18n
 ```
 
 `SKILL.md` is the always-loaded core. The `references/` files are pulled in progressively — Claude reads `graphql-api.md` only when you're actually touching GraphQL, keeping context lean.
@@ -102,7 +107,7 @@ Keep anything secret or client-confidential in a **private** copy — never comm
 
 - **Claude Code** (CLI, desktop, IDE extensions) — native Skills support.
 - Targets **Magento 2.4.9** best practices; annotated for 2.4.6/2.4.7/2.4.8 differences in `release-matrix.md`.
-- Facts verified as of **2026-07-06**. Magento's cadence is monthly security patches + an annual May feature release, so re-check `release-matrix.md` against Adobe's release notes over time.
+- Facts verified as of **2026-07-06**; releases, lifecycle and security patches re-checked **2026-11-07**. Magento's cadence is monthly security patches + an annual May feature release, so re-check `release-matrix.md` against Adobe's release notes over time.
 
 ## License
 

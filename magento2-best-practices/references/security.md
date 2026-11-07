@@ -2,14 +2,15 @@
 
 ## Patching
 
-- Apply security-only patches (`2.4.x-pN`, tied to APSB bulletins at helpx.adobe.com/security/products/magento.html) **within days** of release — attackers reverse-engineer patches in days-to-weeks (CosmicSting precedent). Latest wave 2026-05-12 (APSB26-49): 2.4.8-p5 / 2.4.7-p10 / 2.4.6-p15, fixes incl. stored-XSS→code-exec (CVE-2026-34686) and path-traversal write (CVE-2026-34653).
+- Apply security patches **within days** of release — attackers reverse-engineer patches in days-to-weeks (CosmicSting precedent). Bulletins: `https://www.adobe.com/trust/security/products/commerce/apsb26-NN.html`. Since July 2026 fixes ship as monthly **isolated patches** (`2.4.x-2026-<mon>`, ZIP files, not Composer packages) on top of the latest `-pN` of the line. Earlier monthly patches must already be applied in release order; within a month apply CE, then EE, then B2B files. Check with `php vendor/bin/patch-status` (ships in the July 2026 patch). Open Source can download them only for 2.4.7 and later ([KA-49323](https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-49323)). Re-check the current state in [release-matrix.md](release-matrix.md) before stating it.
+- Bulletins currently open (out-of-band hotfix, lines without a fix): [release-matrix.md](release-matrix.md#current-releases).
 - Individual quality fixes: **Quality Patches Tool** (`composer require magento/quality-patches`; `vendor/bin/magento-patches status|apply ACSD-XXXXX|revert`) — never hand-edit vendor/.
 - Run Adobe's free **Commerce Security Scan** (account.magento.com — works for Open Source) as continuous external monitoring.
 
 ## Admin hardening
 
 - Custom admin front name, Add Secret Key to URLs ON, case-sensitive passwords, session lifetime + ~90-day password lifetime, login lockout, IP-allowlist/VPN the admin, WAF in front, audit docroot for exposed .git/dumps/logs.
-- Least-privilege ACL roles. **Since 2.4.8 new ACL resources from custom modules are NOT auto-granted to existing roles** — grant explicitly.
+- Least-privilege ACL roles. **Since 2.4.8 new ACL resources from custom modules are NOT auto-granted to existing roles** — grant explicitly. Code-level ACL: see [Admin ACL in code](#admin-acl-in-code).
 - 2FA (`Magento_TwoFactorAuth`) is mandatory since 2.4.0 for admin UI + admin web-API; never disable it in production. 2.4.9: admins configure only ONE enabled provider (was: all). Locked out → `bin/magento security:tfa:reset <user> <provider>`.
 - reCAPTCHA on admin login + storefront forms. 2.4.9 also enforces CAPTCHA on REST/GraphQL account creation (pre-2.4.9 the APIs bypassed form CAPTCHA — bots registered via API).
 
@@ -29,6 +30,14 @@
 - **Prohibited functions**: `eval`, `serialize`/`unserialize` (object injection — use `SerializerInterface`/Json), `md5`/`sha1` for security, `srand`/`mt_srand`, `passthru`/`system`/`shell_exec`; never pass user input to include/require/fopen/preg_replace. PHPCS Magento2 ruleset enforces — keep it in CI.
 - **Crypto**: `EncryptorInterface` for secrets (`encrypt/decrypt`) and passwords (`getHash/isValidHash`); system-config secrets get `backend_model` `Config\Backend\Encrypted`. Never roll your own.
 - **Secrets & git**: `env.php` (crypt key! DB creds) and `auth.json` NEVER committed; `config.php` IS committed. Per-env values via `config:sensitive:set` / `CONFIG__DEFAULT__*` env vars; lock critical values with `config:set --lock-env`.
+
+## Admin ACL in code
+
+- Every adminhtml controller overrides `ADMIN_RESOURCE` with its own `etc/acl.xml` resource. The inherited default is `Magento_Backend::admin`, which every saved role receives ("Give basic admin permissions to any admin"), so a controller without its own constant is open to every admin user. A `menu.xml` item's `resource` does not protect the controller.
+- Every `system.xml` `<section>` declares `<resource>`: without it `Section::isAllowed()` returns false and the section is hidden from all admins.
+- Every admin UI listing and form declares `<aclResource>` inside its `<dataSource>`. `mui/index/render` renders any UI component by `namespace` and its own `_isAllowed()` returns true; `aclResource` is the only check on that route. Adobe's admin-grid tutorial omits it — do not copy it blindly. Same on 2.4.6.
+
+Sources: core code, magento/magento2 2.4.9: `app/code/Magento/Backend/App/AbstractAction.php`, `app/code/Magento/Authorization/Model/ResourceModel/Rules.php` (`saveRel`), `app/code/Magento/Config/Model/Config/Structure/Element/Section.php`, `app/code/Magento/Ui/Controller/Adminhtml/AbstractAction.php`, `app/code/Magento/Ui/Controller/Adminhtml/Index/Render.php` (`validateAclResource`), example `app/code/Magento/Cms/view/adminhtml/ui_component/cms_page_listing.xml`; [ACL tutorial](https://developer.adobe.com/commerce/php/tutorials/backend/create-access-control-list-rule), [admin grid tutorial](https://developer.adobe.com/commerce/php/development/components/add-admin-grid) (opened November 2026).
 
 ## Attack classes to design against
 

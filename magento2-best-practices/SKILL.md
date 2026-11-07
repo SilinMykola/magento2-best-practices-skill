@@ -1,6 +1,6 @@
 ---
 name: magento2-best-practices
-description: Magento 2.4.x (target 2.4.9) development best practices. Use whenever writing, reviewing, or planning Magento/Adobe Commerce code — modules, plugins, observers, GraphQL resolvers, REST endpoints, db_schema changes, admin UI, cron/queues. Triggers on "build a Magento module/feature", "add GraphQL mutation/query", "fix Magento bug", "review this Magento code", "upgrade Magento".
+description: Magento 2.4.x (target 2.4.9) development best practices. Use whenever writing, reviewing, or planning Magento/Adobe Commerce code — modules, plugins, observers, GraphQL resolvers, REST endpoints, db_schema changes, admin UI, layout XML/templates/RequireJS/themes, CLI commands, cron/queues. Triggers on "build a Magento module/feature", "add GraphQL mutation/query", "fix Magento bug", "review this Magento code", "upgrade Magento".
 ---
 
 # Magento 2 Best Practices (2.4.x, target 2.4.9)
@@ -55,7 +55,8 @@ version-sensitive, check [release-matrix.md](references/release-matrix.md).
    escapeUrl/escapeJs` — pick the context-correct method. `// @noEscape` only
    for values already escaped/known-safe, with a comment saying why.
 8. **All state-changing controllers/mutations validate**: CSRF (form key) for
-   frontend/admin POST, ACL (`_isAllowed`/`etc/acl.xml`) for adminhtml,
+   frontend/admin POST, ACL for adminhtml (own `ADMIN_RESOURCE` per controller,
+   `<resource>` per system.xml section, `aclResource` per UI component),
    authorization checks in GraphQL resolvers/webapi (never trust client IDs —
    derive customer/seller from context/token).
 9. **Money paths are sacred**: single-writer services, idempotency keys,
@@ -68,7 +69,9 @@ version-sensitive, check [release-matrix.md](references/release-matrix.md).
 11. **Every observer/plugin must be crash-safe**: no assumptions about admin
     session, request params, or area; wrap non-essential side-work in
     `try/catch (\Throwable)` + log. A broken observer on a core event takes
-    the whole flow down.
+    the whole flow down. This is for observers and plugins only: data patches
+    and cron jobs let exceptions escape, queue handlers follow
+    [backend-components.md](references/backend-components.md).
 12. **Secrets never in git**: `auth.json`, `env.php` values, API keys, crypt
     keys. Config that differs per environment goes in `env.php`/environment
     variables, not `config.php`.
@@ -122,6 +125,10 @@ removed elements.
 - New/changed public service surface has at least a happy-path +
   failure-path test (see [quality-testing.md](references/quality-testing.md)),
   and every new test has been seen failing before it passes
+- Changed PHP files pass `php -l` under the newest PHP the target supports
+  with no `Deprecated:` line in the output (the exit code stays 0; 8.4+
+  reports implicitly nullable parameters, and Magento turns every
+  deprecation into an exception — see module-development.md)
 - In a DDEV project with the magento2-ddev harness, run tests through its commands
   (`ddev test-unit`, `ddev test-integration`, ...; the `magento-ddev` skill); when
   magento-perf-check is available, run it on the changed code
@@ -131,13 +138,19 @@ removed elements.
 - [release-matrix.md](references/release-matrix.md) — 2.4.9/2.4.8 platform
   matrix (PHP/DB/search/cache), deprecations, upgrade path from 2.4.6
 - [module-development.md](references/module-development.md) — DI details,
-  plugins/observers depth, declarative schema & patches, module packaging
+  plugins/observers depth, declarative schema & patches, module packaging,
+  stateless services (2.4.7+), PHP 8.4/8.5 deprecations
 - [graphql-api.md](references/graphql-api.md) — resolver patterns, batch
   resolvers, caching, auth, input limits, REST/webapi, async APIs
 - [performance-ops.md](references/performance-ops.md) — modes, deploy
   pipeline, cron/queues, indexers, Redis/Valkey, Varnish, collection
   anti-patterns
 - [security.md](references/security.md) — patching cadence, admin hardening,
-  CSP, code-level security rules, known attack classes
+  admin ACL in code, CSP, code-level security rules, known attack classes
 - [quality-testing.md](references/quality-testing.md) — unit/integration/
-  api-functional tests, fixtures, PHPCS/PHPStan, CI, semver
+  api-functional tests, fixtures, application state tests, PHPCS/PHPStan, CI, semver
+- [backend-components.md](references/backend-components.md) — extension
+  attributes, EAV attribute patches, CLI commands, cron, logging, config scope,
+  store emulation, queue consumers, transactional email
+- [frontend.md](references/frontend.md) — view models, layout XML, customer-data
+  sections, RequireJS mixins, jsLayout, themes/LESS, translations

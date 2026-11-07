@@ -12,7 +12,8 @@
 
 - Install cron as the filesystem owner: `bin/magento cron:install` — must fire every minute, never as root. Without it: scheduled indexers, queue consumers, sitemaps, emails silently stop. Built-in groups: default, index, consumers; heavy groups get `use_separate_process=1` / `cron:run --group=X`.
 - Consumers via env.php `cron_consumers_runner`: `cron_run: true`, `max_messages` ~10000 (NEVER 0/infinite — memory), list consumers explicitly or empty=all. 2.4.4+: `multiple_processes` per queue. Alternative: Supervisor/systemd running `queue:consumers:start`.
-- **RabbitMQ (amqp) over the MySQL queue** for anything beyond trivial volume — the db adapter polls and doesn't scale with concurrent consumers. (2.4.9 supports RabbitMQ 4.2; ActiveMQ Artemis flagged as long-term direction.)
+- What happens to a message when a handler throws, and cron job failure handling: [backend-components.md](backend-components.md).
+- **RabbitMQ (amqp) over the MySQL queue** for anything beyond trivial volume — the db adapter polls and doesn't scale with concurrent consumers. (2.4.9 supports RabbitMQ 4.2, 4.3 listed as of November 2026; ActiveMQ Artemis flagged as long-term direction — see release-matrix.md.)
 
 ## Indexers
 

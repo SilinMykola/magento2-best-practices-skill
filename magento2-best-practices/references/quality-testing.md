@@ -49,7 +49,7 @@ Old tests in core still show pre-10 styles; do not copy them into new tests.
 
 ## Fixtures (integration + api-functional)
 
-- Prefer attribute-based parameterized fixtures (available since ~2.4.5, so usable on 2.4.6):
+- Prefer attribute-based parameterized fixtures (`#[DataFixture]` since 2.4.5; its `scope` and `count` arguments since 2.4.6, per `dev/tests/integration/framework/Magento/TestFramework/Fixture/DataFixture.php` at those tags):
   `#[DataFixture(ProductFixture::class, ['sku' => 'x-%uniqid%'], as: 'p1', scope: 'store2', count: 3)]`
 - Reference other fixtures: `['cart_id' => '$cart.id$']`; retrieve via `DataFixtureStorageManager::getStorage()->get('alias')`.
 - Fixture classes: single responsibility, `%uniqid%` for unique SKUs/emails, no inter-fixture coupling (compose via service APIs), implement revert for anything DB-transactions don't roll back.
@@ -63,13 +63,23 @@ Old tests in core still show pre-10 styles; do not copy them into new tests.
 - A legacy fixture file under `_files/` must not `require` another one: `Resolver::getInstance()->requireDataFixture()`.
 - Integration setup: dedicated EMPTY throwaway DB in `dev/tests/integration/etc/install-config-mysql.php`; `TESTS_CLEANUP=enabled` reinstalls per run (clean, slow) — if disabled, delete `dev/tests/integration/tmp/sandbox-*` after module changes. Third-party module suites need a testsuite entry in phpunit.xml.
 
+## Application state tests (core, 2.4.7+)
+
+Core integration tests catch mutable state in services (rules in module-development.md, "Stateless services"):
+- `dev/tests/integration/testsuite/Magento/GraphQl/App/GraphQlStateTest.php` (with `GraphQlCheckoutMutationsStateTest.php` and `GraphQlCustomerMutationsTest.php`) runs each GraphQL operation twice and compares shared ObjectManager instances: request 2 against request 1 ("%d objects changed state during request") and against the constructed state ("%d objects changed state since constructed"); the messages come from `GraphQl/App/State/GraphQlStateDiff.php`.
+- `dev/tests/integration/testsuite/Magento/Framework/ObjectManager/ResetAfterRequestTest.php` builds every `ResetAfterRequestInterface` implementor, calls `_resetState()` and requires the constructed state back; a reset to `null` where the constructor set `[]` fails it.
+- Fix a failure in this order: remove the mutable state (arguments, or a stateful helper from a Factory); else implement `_resetState()`; only for framework or config caches that are safe to keep, add an entry with a reason comment to `dev/tests/integration/framework/Magento/TestFramework/ApplicationStateComparator/_files/state-skip-list.php` (whole classes) or `state-filter-list.php` (single properties). The path given on Adobe's app-server page is outdated; use this one.
+- "Typed property ... must not be accessed before initialization" in these tests means temporal coupling: refactor.
+
+Sources: those files on 2.4-develop; [Application Server, "How to fix test failures"](https://developer.adobe.com/commerce/php/development/components/app-server) (opened November 2026).
+
 ## Static quality gates
 
-- PHPCS: `vendor/bin/phpcs --standard=Magento2 --extensions=php,phtml` (magento-coding-standard v40, 2026-03). Marketplace blocks only severity ≥ 10 errors — reproduce with `--error-severity=10 --ignore-annotations`. CI: severity-10 = hard fail, lower = advisory. `phpcbf` auto-fixes.
+- PHPCS: `vendor/bin/phpcs --standard=Magento2 --extensions=php,phtml` (magento-coding-standard [v41](https://github.com/magento/magento-coding-standard/releases/tag/v41), 2026-08-18; only ESLint was updated since v40). Marketplace blocks only severity ≥ 10 errors — reproduce with `--error-severity=10 --ignore-annotations`. CI: severity-10 = hard fail, lower = advisory. `phpcbf` auto-fixes.
 - PHPStan: core's static suite runs level 1 — a floor, not a target. Modules: level 5+ with `bitexpert/phpstan-magento` (understands factories/proxies/generated code).
 - php-cs-fixer is complementary (core ships `.php-cs-fixer.dist.php`: @PSR2 + ordered_imports, no_unused_imports, short arrays) — formatting, while phpcs checks the standard.
 - SemVer enforcement: `magento/magento-semver` (`php bin/svc compare <old> <new>`) reports the required PATCH/MINOR/MAJOR bump + each breaking change; CI should fail if the report exceeds the composer.json bump. Marketplace runs exactly this.
-- @api BC policy: PATCH releases allow only patch-level changes; @api surface changes (signatures, arg types/defaults, thrown exceptions) are forbidden without explicit decision. New constructor deps: append at END with `null` default + ObjectManager fallback.
+- @api BC policy: PATCH releases allow only patch-level changes; @api surface changes (signatures, arg types/defaults, thrown exceptions) are forbidden without explicit decision. New constructor deps: append at END as `?Foo $foo = null` + ObjectManager fallback.
 - Upgrade Compatibility Tool is **Adobe-Commerce-only**. Open Source substitutes: magento-semver + PHPStan/PHPCompatibility + `ampersand/magento2-upgrade-patch-helper`.
 
 ## CI
