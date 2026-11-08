@@ -10,7 +10,7 @@
 > services and application state tests (2.4.7+), PHP 8.4/8.5 deprecations, and
 > the isolated-patch security process of 2026; then `payments.md`,
 > `inventory-msi.md`, `admin-ui.md`, Hyvä storefronts, custom indexers and cache
-> types, and upload/path/mass-assignment/SSRF rules. Each rule carries its source.
+> types, upload/path/mass-assignment/SSRF rules, and `checkout-quote.md`. Each rule carries its source.
 
 **Related tools** (each works alone; together they cover a change from rule to green PR):
 - [magento-perf-check](https://github.com/SilinMykola/magento-perf-check): analyzer for performance and Full Page Cache anti-patterns; the magento-ddev harness runs it on changed lines (`ddev perf-check`).
@@ -37,7 +37,8 @@ magento2-best-practices/
     ├── frontend.md             # view models, layout XML, customer-data sections, RequireJS, themes, i18n, Hyvä
     ├── admin-ui.md             # listings, forms and modifiers, mass actions, inline edit
     ├── payments.md             # payment gateway, order state, vault, headless payments, webhooks
-    └── inventory-msi.md        # salable qty, reservations, legacy stock API, ERP stock import
+    ├── inventory-msi.md        # salable qty, reservations, legacy stock API, ERP stock import
+    └── checkout-quote.md       # totals collectors and fees, shipping carriers, quote loading, checkout fields
 ```
 
 `SKILL.md` is the always-loaded core. The `references/` files are pulled in progressively — Claude reads `graphql-api.md` only when you're actually touching GraphQL, keeping context lean.

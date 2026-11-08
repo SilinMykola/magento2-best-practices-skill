@@ -1,6 +1,6 @@
 ---
 name: magento2-best-practices
-description: Magento 2.4.x (target 2.4.9) development best practices. Use whenever writing, reviewing, or planning Magento/Adobe Commerce code — modules, plugins, observers, GraphQL resolvers, REST endpoints, db_schema changes, admin UI, layout XML/templates/RequireJS/Hyvä themes, payment methods, inventory/MSI, CLI commands, cron/queues/indexers. Triggers on "build a Magento module/feature", "add GraphQL mutation/query", "fix Magento bug", "review this Magento code", "upgrade Magento".
+description: Magento 2.4.x (target 2.4.9) development best practices. Use whenever writing, reviewing, or planning Magento/Adobe Commerce code — modules, plugins, observers, GraphQL resolvers, REST endpoints, db_schema changes, admin UI, layout XML/templates/RequireJS/Hyvä themes, payment methods, checkout totals/fees, shipping carriers, inventory/MSI, CLI commands, cron/queues/indexers. Triggers on "build a Magento module/feature", "add GraphQL mutation/query", "fix Magento bug", "review this Magento code", "upgrade Magento".
 ---
 
 # Magento 2 Best Practices (2.4.x, target 2.4.9)
@@ -162,3 +162,5 @@ removed elements.
   can_* flags), payment actions and order state, vault, headless and webhooks
 - [inventory-msi.md](references/inventory-msi.md) — salable qty, stock resolution,
   legacy CatalogInventory, reservations, ERP stock import, source selection
+- [checkout-quote.md](references/checkout-quote.md) — totals collectors and fees
+  (quote, order, invoice, credit memo), shipping carriers, quote loading, checkout fields
