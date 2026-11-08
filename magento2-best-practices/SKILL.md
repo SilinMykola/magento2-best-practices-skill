@@ -1,6 +1,6 @@
 ---
 name: magento2-best-practices
-description: Magento 2.4.x (target 2.4.9) development best practices. Use whenever writing, reviewing, or planning Magento/Adobe Commerce code — modules, plugins, observers, GraphQL resolvers, REST endpoints, db_schema changes, admin UI, layout XML/templates/RequireJS/Hyvä themes, payment methods, checkout totals/fees, shipping carriers, catalog data and URL rewrites, inventory/MSI, CLI commands, cron/queues/indexers. Triggers on "build a Magento module/feature", "add GraphQL mutation/query", "fix Magento bug", "review this Magento code", "upgrade Magento".
+description: Magento 2.4.x (target 2.4.9) development best practices. Use whenever writing, reviewing, or planning Magento/Adobe Commerce code — modules, plugins, observers, GraphQL resolvers, REST endpoints, db_schema changes, admin UI, layout XML/templates/RequireJS/Hyvä themes, payment methods, checkout totals/fees, shipping carriers, catalog data and URL rewrites, price rules and coupons, import/export, inventory/MSI, CLI commands, cron/queues/indexers. Triggers on "build a Magento module/feature", "add GraphQL mutation/query", "fix Magento bug", "review this Magento code", "upgrade Magento".
 ---
 
 # Magento 2 Best Practices (2.4.x, target 2.4.9)
@@ -132,7 +132,7 @@ removed elements.
   reports implicitly nullable parameters, and Magento turns every
   deprecation into an exception — see module-development.md)
 - In a DDEV project with the magento2-ddev harness, run tests through its commands
-  (`ddev test-unit`, `ddev test-integration`, ...; the `magento-ddev` skill); when
+  (`ddev magento-test-unit`, `ddev magento-test-integration`, ...; the `magento-ddev` skill); when
   magento-perf-check is available, run it on the changed code
 
 ## Reference files (read on demand)
@@ -166,3 +166,7 @@ removed elements.
   (quote, order, invoice, credit memo), shipping carriers, quote loading, checkout fields
 - [catalog-data.md](references/catalog-data.md) — product save scope in CLI/cron/REST,
   link field (`row_id` on Commerce), URL rewrite regeneration, search and filter attributes
+- [promotions.md](references/promotions.md) — custom cart rule conditions, rule order,
+  coupon usage and generation, catalog rule indexing
+- [import-export.md](references/import-export.md) — custom import/export entities,
+  behaviors, bunches, validation strategy, indexers after import
